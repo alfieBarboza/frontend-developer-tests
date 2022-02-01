@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { getUsers } from './api';
 import { Country, User } from './types';
+// import CountryList from './components/CountryList';
 
 function App() {
   const [users, setUsers] = useState<Array<User>>([]);
@@ -29,7 +30,7 @@ function App() {
   const countries: Array<Country> = users.reduce((acc: Array<Country>, user: User) => {
     const country = acc.find(country => country.name === user.location.country);
     if (country) {
-      // existant country, add quantity
+      // existing country, add quantity
       acc = acc.map(country => {
         if (country.name === user.location.country) country.qty++;
         return country;
@@ -37,8 +38,12 @@ function App() {
     } else {
       // new country, add to array
       acc = [...acc, { name: user.location.country, qty: 1 }];
+      /**
+       * I could also use:
+       * acc.push({name: user.location.country, qty:1})
+       * This is not a good practice
+       */
     }
-
     return acc;
   }, []);
 
@@ -52,6 +57,7 @@ function App() {
         <ul className="user-list">
           {selectedCountryUsers.map(user => {
             // object destructuring for easier readability and usage
+            // I could just use user.xxx for assigning on the html but it's easier to read this way
             const { name: { first, last }, email, gender, location: { city, state }, registered: { date } } = user;
 
             return (
@@ -66,22 +72,29 @@ function App() {
   }
 
   const renderGenderFilter = () => {
+    const genderList = ["all", "male", "female"];
+
     return (
       <div className="gender-filter">
         <label htmlFor="gender">Filter by Gender: </label>
         <select name="gender" value={selectedGender} onChange={event => setSelectedGender(event.target.value)}>
-          <option value="male">Male</option>
+          {genderList.map(item => <option key={item} value={item}>{item}</option>)}
+          {/* <option value="male">Male</option>
           <option value="female">Female</option>
-          <option value="all">All</option>
+          <option value="all">All</option> */}
         </select>
       </div>
     );
   }
 
+  
   const toggleUserList = (country: string) => {
+    // If the user-List is opened then return selected country to null to close it
     const selected = selectedCountry === country ? null : country;
-
     setSelectedCountry(selected);
+
+    //returns the gender filter to the default value
+    setSelectedGender("all");
   }
 
   return (
@@ -90,11 +103,21 @@ function App() {
         {countries.sort((currentItem, nextItem) => nextItem.qty - currentItem.qty).map(country => (
           <li key={country.name} className="country">
             <span className="title" onClick={() => toggleUserList(country.name)}>{country.name} ({country.qty})</span>
+            {/* Moved these two elements to their own function for readability */}
+            {/* When the country is selected the gender filter should be rendered */}
             {selectedCountry === country.name && renderGenderFilter()}
+            {/* When the country is selected the user list for that country should be rendered */}
             {selectedCountry === country.name && renderCountryUsersList()}
           </li>
         ))}
       </ul>
+      {/* <CountryList
+        countries={countries}
+        selectedCountry={selectedCountry}
+        renderGenderFilter={renderGenderFilter}
+        renderCountryUsersList={renderCountryUsersList}
+        toggleUserList={toggleUserList}
+      /> */}
     </div>
   );
 }
